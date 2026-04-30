@@ -22,7 +22,7 @@ mongomock==4.1.2
 neo4j==5.20.0
 
 # AI / ML
-numpy>=2.1.0
+numpy<2.0.0
 scikit-learn>=1.5.2
 pandas>=2.2.3
 scipy>=1.14.0
