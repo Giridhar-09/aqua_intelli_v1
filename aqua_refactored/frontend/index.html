@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AquaIntelli — God's Eye View</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
+</head>
+<body>
+
+<!-- ══════ HEADER ══════ -->
+<header class="header">
+  <div class="header-left">
+    <div class="logo-dot"></div>
+    <div>
+      <div class="logo-text">AquaIntelli</div>
+      <div class="logo-sub">GOD'S EYE VIEW · 8-MODULE WATER INTELLIGENCE</div>
+    </div>
+    <div class="status-pills">
+      <span class="pill pill-live">● LIVE</span>
+      <span class="pill pill-normal">8 MODULES</span>
+      <span class="pill pill-alert" id="pill-critical">3 CRITICAL</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="header-secret">TOP SECRET // SCI // NOFORN</div>
+    <div class="clock">UTC <span id="clock-time">00:00:00</span></div>
+  </div>
+</header>
+
+<!-- ══════ MODULE TABS ══════ -->
+<nav class="module-tabs">
+  <button class="mod-tab active" data-module="godseyeview" onclick="switchModule('godseyeview',this)"><span class="mod-num">00</span> GOD'S EYE</button>
+  <button class="mod-tab" data-module="groundwater"  onclick="switchModule('groundwater',this)"><span class="mod-num">01</span> GROUNDWATER</button>
+  <button class="mod-tab" data-module="reservoir"    onclick="switchModule('reservoir',this)"><span class="mod-num">02</span> RESERVOIR</button>
+  <button class="mod-tab" data-module="irrigation"   onclick="switchModule('irrigation',this)"><span class="mod-num">03</span> IRRIGATION AI</button>
+  <button class="mod-tab" data-module="borewell"     onclick="switchModule('borewell',this)"><span class="mod-num">04</span> BOREWELL</button>
+  <button class="mod-tab" data-module="drainage"     onclick="switchModule('drainage',this)"><span class="mod-num">05</span> DRAINAGE</button>
+  <button class="mod-tab" data-module="flood"        onclick="switchModule('flood',this)"><span class="mod-num">06</span> FLOOD</button>
+  <button class="mod-tab" data-module="aquifer"      onclick="switchModule('aquifer',this)"><span class="mod-num">07</span> AQUIFER SCAN</button>
+  <button class="mod-tab" data-module="crisis"       onclick="switchModule('crisis',this)"><span class="mod-num">08</span> CRISIS FORECAST</button>
+</nav>
+
+<!-- ══════ LEFT PANEL ══════ -->
+<aside class="panel-left">
+  <div class="panel-section">
+    <div class="panel-title">GLOBAL STATUS</div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-label">AQUIFER ZONES</div><div class="stat-value warn">847</div><div class="stat-unit">MONITORED</div><div class="stat-delta down">↓ 3.2% THIS MONTH</div></div>
+      <div class="stat-card"><div class="stat-label">CRITICAL ALERTS</div><div class="stat-value danger" id="alert-count">3</div><div class="stat-unit">ACTIVE NOW</div><div class="stat-delta down">↑ 2 NEW TODAY</div></div>
+      <div class="stat-card"><div class="stat-label">BOREWELLS PRED.</div><div class="stat-value good">1,247</div><div class="stat-unit">SITES SCANNED</div><div class="stat-delta up">↑ 89 TODAY</div></div>
+      <div class="stat-card"><div class="stat-label">SATELLITE PASS</div><div class="stat-value">12</div><div class="stat-unit">ACTIVE ORBITS</div><div class="stat-delta up">● SYNCING</div></div>
+    </div>
+    <div style="margin-top:10px;">
+      <div class="panel-title">GROUNDWATER INDEX — 30D</div>
+      <div class="mini-chart" id="mini-chart"></div>
+    </div>
+  </div>
+  <div class="panel-section"><div class="panel-title">INTELLIGENCE FEED</div></div>
+  <div class="alert-feed" id="alert-feed"></div>
+</aside>
+
+<!-- ══════ RIGHT PANEL ══════ -->
+<aside class="panel-right">
+  <div class="panel-section"><div class="panel-title">TARGET ACQUISITION</div></div>
+  <div class="target-card">
+    <div class="target-label">REGION SELECTED</div>
+    <div class="target-value" id="target-region">ANDHRA PRADESH, IN</div>
+    <div class="target-grace" id="target-grace">GRACE: <span style="color:var(--warning)">-2.66m</span> | SM: 28.6%</div>
+    <div class="coord-row"><span id="rp-lat">LAT 17.385°N</span><span id="rp-lon">LON 78.487°E</span></div>
+  </div>
+  <div style="padding:0 16px 8px;">
+    <div class="panel-title">AI PREDICTION</div>
+    <div class="pred-box">
+      <div class="pred-header"><span>DEPLETION FORECAST</span><span style="color:var(--warning)">90-DAY</span></div>
+      <canvas id="pred-chart" height="60" style="width:100%;display:block;"></canvas>
+    </div>
+  </div>
+  <div style="padding:0 16px 6px;"><div class="panel-title">ACTIVE SATELLITES</div></div>
+  <div class="progress-bar"><div class="progress-fill"></div></div>
+  <div class="satellite-list">
+    <div class="sat-item"><div class="sat-dot" style="background:var(--accent);box-shadow:0 0 4px var(--accent)"></div><div class="sat-name">GRACE-FO A/B</div><div class="sat-status">AQUIFER</div></div>
+    <div class="sat-item"><div class="sat-dot" style="background:var(--primary);box-shadow:0 0 4px var(--primary)"></div><div class="sat-name">SENTINEL-1A</div><div class="sat-status">SOIL MOIST.</div></div>
+    <div class="sat-item"><div class="sat-dot" style="background:var(--primary);box-shadow:0 0 4px var(--primary)"></div><div class="sat-name">SENTINEL-2B</div><div class="sat-status">NDVI/CROP</div></div>
+    <div class="sat-item"><div class="sat-dot" style="background:var(--warning);box-shadow:0 0 4px var(--warning)"></div><div class="sat-name">LANDSAT-9</div><div class="sat-status">SURFACE</div></div>
+    <div class="sat-item"><div class="sat-dot" style="background:var(--text-dim)"></div><div class="sat-name">MODIS TERRA</div><div class="sat-status">OFFLINE</div></div>
+    <div class="sat-item"><div class="sat-dot" style="background:var(--accent);box-shadow:0 0 4px var(--accent)"></div><div class="sat-name">IMD INSAT-3D</div><div class="sat-status">RAINFALL</div></div>
+  </div>
+  <div style="padding:12px 16px;border-top:1px solid var(--border);">
+    <div class="panel-title">RAG QUERY</div>
+    <div class="rag-input-wrap">
+      <input id="rag-input" class="rag-input" type="text" placeholder="Ask about water...">
+      <button class="rag-btn" onclick="triggerRAG()">ASK AI</button>
+    </div>
+    <div class="rag-response" id="rag-response"></div>
+  </div>
+</aside>
+
+<!-- ══════ MAIN CONTENT ══════ -->
+<main class="main-content">
+
+  <!-- ── LOCATION BAR (always visible, every module) ── -->
+  <div class="location-bar">
+
+    <div class="loc-module-tag" id="loc-module-tag">00 · GOD'S EYE VIEW</div>
+
+    <div class="loc-fields">
+      <div class="loc-field-group">
+        <label class="loc-label">LATITUDE</label>
+        <input class="loc-input" id="loc-lat" type="number" step="0.001" value="17.385" placeholder="17.385"
+               oninput="onCoordInput()">
+      </div>
+      <div class="loc-field-sep">/</div>
+      <div class="loc-field-group">
+        <label class="loc-label">LONGITUDE</label>
+        <input class="loc-input" id="loc-lon" type="number" step="0.001" value="78.487" placeholder="78.487"
+               oninput="onCoordInput()">
+      </div>
+      <div class="loc-field-sep">//</div>
+      <div class="loc-field-group loc-field-wide" style="position:relative;">
+        <label class="loc-label">LOCATION NAME</label>
+        <input class="loc-input loc-name-input" id="loc-name" type="text"
+               value="Hyderabad, Andhra Pradesh, India" placeholder="City, District, State..."
+               onkeydown="if(event.key==='Enter') analyzeLocation()"
+               oninput="onLocationInput()">
+        <div id="loc-search-results" class="loc-search-results"></div>
+      </div>
+      <button class="loc-analyze-btn" onclick="analyzeLocation()">▶ ANALYZE</button>
+      <button class="loc-gps-btn"     onclick="geolocate()" title="Use GPS location">⊕ GPS</button>
+    </div>
+
+    <div class="loc-status-badge">
+      <div class="loc-status-dot" id="loc-status-dot"></div>
+      <span id="loc-status-txt">READY</span>
+    </div>
+  </div>
+
+  <!-- ── METRICS STRIP (hidden on God's Eye) ── -->
+  <div class="metrics-strip" id="metrics-strip">
+    <div class="metric-card"><div class="metric-lbl" id="ml-0">GRACE ANOMALY</div><div class="metric-val danger" id="mv-0">-2.66</div><div class="metric-unit" id="mu-0">METERS EWH</div><div class="metric-src" id="ms-0">SRC: GRACE-FO</div></div>
+    <div class="metric-card"><div class="metric-lbl" id="ml-1">CURRENT DEPTH</div><div class="metric-val" id="mv-1">73.3</div><div class="metric-unit" id="mu-1">METERS BGL</div><div class="metric-src" id="ms-1">SRC: CGWB</div></div>
+    <div class="metric-card"><div class="metric-lbl" id="ml-2">SOIL MOISTURE</div><div class="metric-val good" id="mv-2">28.6%</div><div class="metric-unit" id="mu-2">VOLUMETRIC</div><div class="metric-src" id="ms-2">SRC: SENTINEL-1</div></div>
+    <div class="metric-card"><div class="metric-lbl" id="ml-3">RAINFALL 180</div><div class="metric-val" id="mv-3">120</div><div class="metric-unit" id="mu-3">MM</div><div class="metric-src" id="ms-3">SRC: NASA POWER</div></div>
+    <div class="metric-card"><div class="metric-lbl" id="ml-4">30-DAY FCST</div><div class="metric-val warn" id="mv-4">70.9</div><div class="metric-unit" id="mu-4">METERS</div><div class="metric-src" id="ms-4">SRC: AI MODEL v2</div></div>
+    <div class="metric-card"><div class="metric-lbl" id="ml-5">90-DAY FCST</div><div class="metric-val warn" id="mv-5">68.3</div><div class="metric-unit" id="mu-5">METERS</div><div class="metric-src" id="ms-5">SRC: AI MODEL v2</div></div>
+    <div class="metric-card"><div class="metric-lbl" id="ml-6">DEPLETION RATE</div><div class="metric-val danger" id="mv-6">-0.059</div><div class="metric-unit" id="mu-6">M/DAY</div><div class="metric-src" id="ms-6">SRC: DERIVED</div></div>
+    <div class="metric-card risk-card"><div class="metric-lbl" id="ml-7">RISK LEVEL</div><div class="metric-val warn" id="mv-7">WARNING</div><div class="metric-unit" id="mu-7">RECOVERING</div><div class="metric-src" id="ms-7">SRC: AQUAINTELLI</div></div>
+  </div>
+
+  <!-- ── CHARTS STRIP (hidden on God's Eye) ── -->
+  <div class="charts-strip" id="charts-strip">
+    <div class="chart-box">
+      <div class="chart-title" id="ct-1">90-DAY GROUNDWATER DEPTH FORECAST</div>
+      <div class="chart-sub"   id="cs-1">DEPTH (M) — 90 DAYS</div>
+      <canvas id="chart-1" class="module-chart"></canvas>
+    </div>
+    <div class="chart-box last">
+      <div class="chart-title" id="ct-2">SATELLITE DATA FUSION</div>
+      <div class="chart-sub"   id="cs-2">SOIL MOISTURE 30D</div>
+      <canvas id="chart-2" class="module-chart"></canvas>
+    </div>
+  </div>
+
+  <!-- ── CENTER MAP (always visible) ── -->
+  <div class="map-wrap" id="map-wrap">
+
+    <!-- HUD overlays -->
+    <div class="map-hud map-hud-tl" id="hud-tl">
+      <div>MODE: <span id="hud-mode">SATELLITE-FUSED AQUIFER SCAN</span></div>
+      <div id="hud-time">2026-04-12 / UTC 00:00:00</div>
+      <div>RESOLUTION: 10M GSD</div>
+      <div style="margin-top:5px;">FRAMES: <span style="color:var(--primary)" id="frame-count">1,779</span></div>
+      <div>TRACKING: <span style="color:var(--accent)">ACTIVE</span></div>
+      <button class="hud-btn active" id="btn-privacy" onclick="togglePrivacy()">PROTECT PII: ON</button>
+    </div>
+
+    <div class="map-hud map-hud-tr">
+      <div>ALT: 408 KM · INCL: 98.7°</div>
+      <div id="hud-coords" class="masked">17.385°N / 78.487°E</div>
+      <div id="hud-coverage" style="margin-top:4px;">COVERAGE: 847 ZONES</div>
+    </div>
+
+    <!-- Location name badge bottom-left -->
+    <div class="map-hud map-hud-bl" id="hud-bl">
+      <div class="loc-badge">
+        <div class="loc-badge-icon">◎</div>
+        <div>
+          <div class="loc-badge-name masked" id="loc-badge-name">HYDERABAD, ANDHRA PRADESH</div>
+          <div class="loc-badge-coords masked" id="loc-badge-coords">17.385°N · 78.487°E</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Crisis stats bottom-right -->
+    <div class="map-hud map-hud-br">
+      <div class="hud-counts">
+        <div class="hud-count"><div class="hud-count-val warn" id="hud-crisis">3</div><div class="hud-count-lbl">CRISIS</div></div>
+        <div class="hud-count-sep">|</div>
+        <div class="hud-count"><div class="hud-count-val good">12</div><div class="hud-count-lbl">RECHARGE</div></div>
+        <div class="hud-count-sep">|</div>
+        <div class="hud-count"><div class="hud-count-val">847</div><div class="hud-count-lbl">MONITORED</div></div>
+      </div>
+      
+      <!-- Map Legend -->
+      <div class="map-legend">
+        <div class="legend-title">STATUS LEGEND //</div>
+        <div class="legend-row"><span class="l-dot critical"></span> CRITICAL (>75% STRESS)</div>
+        <div class="legend-row"><span class="l-dot warning"></span> WARNING (50-75% STRESS)</div>
+        <div class="legend-row"><span class="l-dot active"></span> OPERATIONAL / INFO</div>
+        <div class="legend-row"><span class="l-dot good"></span> RECHARGE / RECOVERY</div>
+      </div>
+    </div>
+
+    <!-- Crosshair -->
+    <div class="map-crosshair">
+      <svg width="44" height="44" viewBox="0 0 44 44">
+        <line x1="22" y1="0"  x2="22" y2="15" stroke="#00e5ff" stroke-width="1"/>
+        <line x1="22" y1="29" x2="22" y2="44" stroke="#00e5ff" stroke-width="1"/>
+        <line x1="0"  y1="22" x2="15" y2="22" stroke="#00e5ff" stroke-width="1"/>
+        <line x1="29" y1="22" x2="44" y2="22" stroke="#00e5ff" stroke-width="1"/>
+        <circle cx="22" cy="22" r="5"   fill="none" stroke="#00e5ff" stroke-width="1" opacity="0.7"/>
+        <circle cx="22" cy="22" r="1.5" fill="#00e5ff"/>
+      </svg>
+    </div>
+
+    <!-- Leaflet map div -->
+    <div id="center-map"></div>
+    <div id="three-container" class="three-container"></div>
+  </div>
+
+</main>
+
+<div id="timeline-container" class="timeline-container">
+  <input type="range" min="0" max="10" value="10" id="time-slider" oninput="onTimeScroll()">
+  <div class="time-labels"><span>2023-01</span><span>2024-04 (NOW)</span></div>
+</div>
+
+<!-- ══════ TOOLBAR ══════ -->
+<div class="toolbar">
+  <span class="toolbar-label">LAYERS //</span>
+  <button class="layer-btn active"        onclick="toggleLayer(this,'godseyeview')">GOD'S EYE</button>
+  <button class="layer-btn active"        onclick="toggleLayer(this,'groundwater')">GROUNDWATER</button>
+  <button class="layer-btn active"        onclick="toggleLayer(this,'reservoir')">RESERVOIR</button>
+  <button class="layer-btn active"        onclick="toggleLayer(this,'irrigation')">IRRIGATION</button>
+  <button class="layer-btn active"        onclick="toggleLayer(this,'borewell')">BOREWELL</button>
+  <button class="layer-btn active"        onclick="toggleLayer(this,'drainage')">DRAINAGE</button>
+  <button class="layer-btn active"        onclick="toggleLayer(this,'aquifer')">AQUIFER</button>
+  <button class="layer-btn active danger" onclick="toggleLayer(this,'flood')">CRISIS</button>
+  <div style="margin-left:auto;display:flex;gap:6px;">
+    <button class="layer-btn active" id="btn-playback" onclick="togglePlayback()">▶ LIVE</button>
+    <button class="layer-btn"        onclick="setMapMode('2D')">2D</button>
+    <button class="layer-btn active" onclick="setMapMode('3D')">3D</button>
+    <button class="layer-btn"        onclick="setMapMode('4D')">4D</button>
+  </div>
+</div>
+
+<!-- ══════ EVENT POPUP ══════ -->
+<div class="event-popup" id="event-popup">
+  <div class="event-popup-card">
+    <div class="event-popup-header">
+      <span class="alert-badge badge-critical" id="popup-badge">CRITICAL</span>
+      <span class="alert-type" id="popup-type">AQUIFER COLLAPSE</span>
+      <span class="alert-time" id="popup-time">14:00 UTC</span>
+    </div>
+    <div class="event-popup-body">
+      <div class="event-popup-title" id="popup-title">Krishna Basin Depletion</div>
+      <div class="event-popup-detail" id="popup-detail"></div>
+    </div>
+    <div class="event-popup-footer">
+      <button class="btn-sm primary" onclick="flyToEvent()">FLY TO ↗</button>
+      <button class="btn-sm" onclick="closePopup()">DISMISS</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
