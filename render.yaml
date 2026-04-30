@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: aquaintelli
+    env: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: gunicorn -k uvicorn.workers.UvicornWorker --chdir backend app.main:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: PORT
+        value: 10000
+      - key: SQL_DATABASE_URL
+        value: sqlite+aiosqlite:////data/aquaintelli.db
+      - key: MONGO_MOCK
+        value: "true"
+      - key: NEO4J_MOCK
+        value: "true"
+    disk:
+      name: aquaintelli-data
+      mountPath: /data
+      sizeGB: 1

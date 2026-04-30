@@ -37,7 +37,7 @@ langgraph==0.0.69
 langsmith==0.1.77
 
 # RAG
-faiss-cpu==1.8.0
+faiss-cpu
 sentence-transformers==3.0.1
 chromadb==0.5.3
 
